@@ -1,0 +1,169 @@
+syntax = "proto3";
+
+package orders.v1;
+
+option go_package = "github.com/10Narratives/protobuf-contracts/generated/go/orders/v1;ordersv1";
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/field_mask.proto";
+import "validate/validate.proto";
+
+service OrderPointService {
+  rpc ListOrderPoints(ListOrderPointsRequest) returns (ListOrderPointsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/OrderPoints"
+    };
+  }
+
+  rpc GetOrderPoint(GetOrderPointRequest) returns (OrderPoint) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=OrderPoints/*}"
+    };
+  }
+
+  rpc CreateOrderPoint(CreateOrderPointRequest) returns (OrderPoint) {
+    option (google.api.http) = {
+      post: "/v1alpha1/OrderPoints"
+      body: "OrderPoint"
+    };
+  }
+
+  rpc UpdateOrderPoint(UpdateOrderPointRequest) returns (OrderPoint) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{OrderPoint.name=OrderPoints/*}"
+      body: "OrderPoint"
+    };
+  }
+
+  rpc DeleteOrderPoint(DeleteOrderPointRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=OrderPoints/*}"
+    };
+  }
+}
+
+message OrderPoint {
+  option (google.api.resource) = {
+    type: "orders.v1.OrderPoint"
+    pattern: "order-points/{order_point}"
+  };
+
+  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
+  string display_name = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (validate.rules).string = {
+      min_len: 2,
+      max_len: 100,
+      pattern: "^[^\\x00-\\x1f\\x7f]+$"
+    }
+  ];
+  
+  message Address {
+    string postal_code = 1 [
+      (google.api.field_behavior) = REQUIRED,
+      (validate.rules).string = {
+        pattern: "^[0-9]{6}$",
+        max_len: 6,
+        min_len: 6
+      }
+    ];
+    
+    string country_code = 2 [
+      (google.api.field_behavior) = REQUIRED,
+      (validate.rules).string = {
+        pattern: "^[A-Z]{2}$",
+      }
+    ];
+    
+    string region = 3 [
+      (google.api.field_behavior) = REQUIRED,
+      (validate.rules).string = {
+        min_len: 2,
+        max_len: 100
+      }
+    ];
+    
+    string locality = 4 [
+      (google.api.field_behavior) = REQUIRED,
+      (validate.rules).string = {
+        min_len: 2,
+        max_len: 100
+      }
+    ];
+    
+    string municipal_district = 5 [
+      (validate.rules).string = {
+        max_len: 100
+      }
+    ];
+    
+    string street = 6 [
+      (google.api.field_behavior) = REQUIRED,
+      (validate.rules).string = {
+        min_len: 2,
+        max_len: 100
+      }
+    ];
+    
+    string building = 7 [
+      (google.api.field_behavior) = REQUIRED,
+      (validate.rules).string = {
+        min_len: 1,
+        max_len: 20,
+        pattern: "^[0-9a-zA-Zа-яА-Я\\-\\/\\.,\\s]{1,20}$"
+      }
+    ];
+    
+    string apartment = 8 [
+      (validate.rules).string = {
+        max_len: 20,
+        pattern: "^[0-9a-zA-Zа-яА-Я\\-\\/\\.,\\s]{0,20}$"
+      }
+    ];
+  }
+  Address address = 3;
+  
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    STATUS_ACTIVE = 1;
+    STATUS_INACTIVE = 2;
+    STATUS_UNDER_MAINTENANCE = 3;
+  }
+  Status status = 4;
+  
+  google.protobuf.Timestamp create_time = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp update_time = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string etag = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+message ListOrderPointsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListOrderPointsResponse {
+  repeated OrderPoint order_points = 1;
+  string next_page_token = 2;
+}
+
+message GetOrderPointRequest {
+  string name = 1;
+}
+
+message CreateOrderPointRequest {
+  string order_point_id = 1;
+  OrderPoint order_point = 2;
+}
+
+message UpdateOrderPointRequest {
+  OrderPoint order_point = 1;
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteOrderPointRequest {
+  string name = 1;
+}
